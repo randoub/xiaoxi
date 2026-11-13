@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>初中英语单词双向刷题 (七上全册)</title>
+<style>
+  :root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #1e293b;
+    --success: #10b981;
+    --error: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .app {
+    background: var(--card);
+    width: 100%;
+    max-width: 480px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .mode-switch {
+    display: flex;
+    background: #e2e8f0;
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .mode-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .stats span b { color: var(--text); }
+  .question-box {
+    text-align: center;
+    padding: 20px 10px;
+    margin-bottom: 20px;
+    background: #f8fafc;
+    border-radius: 14px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .prompt-label {
+    font-size: 13px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .word-display {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    word-break: break-word;
+    line-height: 1.3;
+  }
+  .phonetic {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 6px;
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .option {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .option:hover:not(.disabled) {
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
+  .option.correct {
+    background: #ecfdf5;
+    border-color: var(--success);
+    color: #047857;
+  }
+  .option.wrong {
+    background: #fef2f2;
+    border-color: var(--error);
+    color: #b91c1c;
+  }
+  .option.disabled { cursor: default; opacity: 0.8; }
+  .feedback {
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    min-height: 24px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .feedback.ok { color: var(--success); }
+  .feedback.no { color: var(--error); }
+  .actions {
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: #e2e8f0; color: var(--text); }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .footer-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+  }
+  .tool-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .tool-btn:hover { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>📖 七上单词自测</h1>
+    <div class="mode-switch">
+      <button class="mode-btn active" id="mode-cn2en" onclick="setMode('cn2en')">中 → 英</button>
+      <button class="mode-btn" id="mode-en2cn" onclick="setMode('en2cn')">英 → 中</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <span>进度：<b id="progress">1 / 10</b></span>
+    <span>正确：<b id="score" style="color:var(--success)">0</b> | 错误：<b id="wrong-count" style="color:var(--error)">0</b></span>
+  </div>
+
+  <div class="question-box">
+    <div class="prompt-label" id="prompt-label">请选择对应的英文单词</div>
+    <div class="word-display" id="word-display">loading...</div>
+    <div class="phonetic" id="phonetic"></div>
+  </div>
+
+  <div class="options" id="options-container"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" id="btn-restart" onclick="initGame()">重新开始</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" disabled>下一题</button>
+  </div>
+
+  <div class="footer-tools">
+    <button class="tool-btn" id="btn-wrong" onclick="startWrongMode()">🔥 错词强化模式</button>
+    <span style="font-size:12px;color:#94a3b8;">新版人教七上全册</span>
+  </div>
+</div>
+
+<script>
+// ---------------- 词库（新人教版七上全册） ----------------
+const WORD_LIST = [
+  // Starter Unit 1
+  { word: "unit", phonetic: "/ˈjuːnɪt/", meaning: "单元" },
+  { word: "starter unit", phonetic: "/ˈstɑːtə(r) ˈjuːnɪt/", meaning: "过渡单元" },
+  { word: "section", phonetic: "/ˈsekʃn/", meaning: "部分；地区" },
+  { word: "greet", phonetic: "/ɡriːt/", meaning: "招呼；问候" },
+  { word: "everyone", phonetic: "/ˈevriwʌn/", meaning: "每人；所有人" },
+  { word: "conversation", phonetic: "/ˌkɒnvəˈseɪʃn/", meaning: "谈话；交谈" },
+  { word: "spell", phonetic: "/spel/", meaning: "用字母拼；拼写" },
+  { word: "bell", phonetic: "/bel/", meaning: "铃（声）；钟（声）" },
+  { word: "PRC", phonetic: "/ˌpiː ɑː(r) ˈsiː/", meaning: "中华人民共和国" },
+  { word: "WHO", phonetic: "/ˌdʌbljuː eɪtʃ ˈəʊ/", meaning: "世界卫生组织" },
+  { word: "UN", phonetic: "/ˌjuː ˈen/", meaning: "联合国" },
+
+  // Starter Unit 2
+  { word: "bottle", phonetic: "/ˈbɒtl/", meaning: "瓶子" },
+  { word: "eraser", phonetic: "/ɪˈreɪzə(r)/", meaning: "橡皮" },
+  { word: "key", phonetic: "/kiː/", meaning: "钥匙；关键" },
+  { word: "thing", phonetic: "/θɪŋ/", meaning: "东西；事情" },
+  { word: "You're welcome.", phonetic: "/jɔː(r) ˈwelkəm/", meaning: "别客气；不用谢。" },
+
+  // Starter Unit 3
+  { word: "fun", phonetic: "/fʌn/", meaning: "乐趣；快乐；有趣的" },
+  { word: "yard", phonetic: "/jɑːd/", meaning: "院子；园圃" },
+  { word: "carrot", phonetic: "/ˈkærət/", meaning: "胡萝卜" },
+  { word: "goose", phonetic: "/ɡuːs/", meaning: "鹅" },
+  { word: "count", phonetic: "/kaʊnt/", meaning: "数数" },
+  { word: "another", phonetic: "/əˈnʌðə(r)/", meaning: "另一；又一" },
+  { word: "else", phonetic: "/els/", meaning: "其他的；别的" },
+  { word: "circle", phonetic: "/ˈsɜːkl/", meaning: "圈出；圆形" },
+  { word: "look at", phonetic: "/lʊk æt/", meaning: "看；瞧" },
+
+  // Unit 1 You and Me
+  { word: "friend", phonetic: "/frend/", meaning: "朋友" },
+  { word: "make friends", phonetic: "/meɪk frendz/", meaning: "交朋友" },
+  { word: "know", phonetic: "/nəʊ/", meaning: "知道" },
+  { word: "get to know", phonetic: "/ɡet tu nəʊ/", meaning: "认识；了解" },
+  { word: "each", phonetic: "/iːtʃ/", meaning: "每个；各自" },
+  { word: "each other", phonetic: "/iːtʃ ˈʌðə(r)/", meaning: "互相；彼此" },
+  { word: "full", phonetic: "/fʊl/", meaning: "完整的；满的" },
+  { word: "grade", phonetic: "/ɡreɪd/", meaning: "年级；等级" },
+  { word: "classmate", phonetic: "/ˈklɑːsmeɪt/", meaning: "同班同学" },
+  { word: "favourite", phonetic: "/ˈfeɪvərɪt/", meaning: "最喜欢的" },
+  { word: "cute", phonetic: "/kjuːt/", meaning: "可爱的" },
+  { word: "parent", phonetic: "/ˈpeərənt/", meaning: "父（母）亲" },
+  { word: "sport", phonetic: "/spɔːt/", meaning: "运动" },
+  { word: "music", phonetic: "/ˈmjuːzɪk/", meaning: "音乐" },
+
+  // Unit 2 We're Family!
+  { word: "mean", phonetic: "/miːn/", meaning: "意思是；打算" },
+  { word: "husband", phonetic: "/ˈhʌzbənd/", meaning: "丈夫" },
+  { word: "bat", phonetic: "/bæt/", meaning: "球棒；球拍" },
+  { word: "together", phonetic: "/təˈɡeðə(r)/", meaning: "在一起；共同" },
+  { word: "member", phonetic: "/ˈmembə(r)/", meaning: "成员" },
+  { word: "chess", phonetic: "/tʃes/", meaning: "国际象棋" },
+  { word: "son", phonetic: "/sʌn/", meaning: "儿子" },
+  { word: "grandparent", phonetic: "/ˈɡrænpeərənt/", meaning: "祖父（母）" },
+  { word: "family", phonetic: "/ˈfæməli/", meaning: "家庭" },
+
+  // Unit 3 My School
+  { word: "hall", phonetic: "/hɔːl/", meaning: "礼堂；大厅" },
+  { word: "building", phonetic: "/ˈbɪldɪŋ/", meaning: "建筑物；房子" },
+  { word: "across", phonetic: "/əˈkrɒs/", meaning: "过；穿过" },
+  { word: "library", phonetic: "/ˈlaɪbrəri/", meaning: "图书馆" },
+  { word: "blackboard", phonetic: "/ˈblækbɔːd/", meaning: "黑板" },
+  { word: "science", phonetic: "/ˈsaɪəns/", meaning: "科学" },
+  { word: "famous", phonetic: "/ˈfeɪməs/", meaning: "著名的" },
+  { word: "question", phonetic: "/ˈkwestʃən/", meaning: "问题" },
+  { word: "exercise", phonetic: "/ˈeksəsaɪz/", meaning: "运动；锻炼；练习" },
+  { word: "interesting", phonetic: "/ˈɪntrəstɪŋ/", meaning: "有趣的" },
+  { word: "busy", phonetic: "/ˈbɪzi/", meaning: "忙碌的" },
+  { word: "between", phonetic: "/bɪˈtwiːn/", meaning: "在……之间" },
+
+  // Unit 4 My Favourite Subject
+  { word: "subject", phonetic: "/ˈsʌbdʒɪkt/", meaning: "学科；科目" },
+  { word: "biology", phonetic: "/baɪˈɒlədʒi/", meaning: "生物学" },
+  { word: "geography", phonetic: "/dʒiˈɒɡrəfi/", meaning: "地理（学）" },
+  { word: "history", phonetic: "/ˈhɪstri/", meaning: "历史；历史课" },
+  { word: "boring", phonetic: "/ˈbɔːrɪŋ/", meaning: "乏味的；令人生厌的" },
+  { word: "useful", phonetic: "/ˈjuːsfl/", meaning: "有用的；有益的" },
+  { word: "exciting", phonetic: "/ɪkˈsaɪtɪŋ/", meaning: "令人激动的" },
+  { word: "hard", phonetic: "/hɑːd/", meaning: "困难的；努力地" },
+  { word: "easy", phonetic: "/ˈiːzi/", meaning: "容易的" },
+  { word: "learn", phonetic: "/lɜːn/", meaning: "学习；得知" },
+
+  // Unit 5 Fun Clubs
+  { word: "club", phonetic: "/klʌb/", meaning: "俱乐部；社团" },
+  { word: "join", phonetic: "/dʒɔɪn/", meaning: "参加；加入" },
+  { word: "choose", phonetic: "/tʃuːz/", meaning: "选择；挑选" },
+  { word: "drama", phonetic: "/ˈdrɑːmə/", meaning: "戏剧；戏剧表演" },
+  { word: "feeling", phonetic: "/ˈfiːlɪŋ/", meaning: "感觉；情感" },
+  { word: "news", phonetic: "/njuːz/", meaning: "消息；新闻" },
+  { word: "sing", phonetic: "/sɪŋ/", meaning: "唱歌" },
+  { word: "swim", phonetic: "/swɪm/", meaning: "游泳" },
+  { word: "dance", phonetic: "/dɑːns/", meaning: "跳舞" },
+  { word: "share", phonetic: "/ʃeə(r)/", meaning: "分享；合用" },
+
+  // Unit 6 A Day in the Life
+  { word: "quarter", phonetic: "/ˈkwɔːtə(r)/", meaning: "一刻钟；四分之一" },
+  { word: "shower", phonetic: "/ˈʃaʊə(r)/", meaning: "淋浴" },
+  { word: "brush", phonetic: "/brʌʃ/", meaning: "刷；刷子" },
+  { word: "tooth", phonetic: "/tuːθ/", meaning: "牙齿" },
+  { word: "duty", phonetic: "/ˈdjuːti/", meaning: "值班；职责" },
+  { word: "o'clock", phonetic: "/əˈklɒk/", meaning: "……点钟" },
+  { word: "half", phonetic: "/hɑːf/", meaning: "一半；半数" },
+  { word: "dress", phonetic: "/dres/", meaning: "穿衣服；连衣裙" },
+  { word: "breakfast", phonetic: "/ˈbrekfəst/", meaning: "早餐" },
+  { word: "dinner", phonetic: "/ˈdɪnə(r)/", meaning: "正餐；主餐" },
+  { word: "lesson", phonetic: "/ˈlesn/", meaning: "课；一节课" },
+
+  // Unit 7 Happy Birthday!
+  { word: "celebrate", phonetic: "/ˈselɪbreɪt/", meaning: "庆祝；庆贺" },
+  { word: "surprise", phonetic: "/səˈpraɪz/", meaning: "惊奇；惊讶" },
+  { word: "something", phonetic: "/ˈsʌmθɪŋ/", meaning: "某事；某物" },
+  { word: "sale", phonetic: "/seɪl/", meaning: "出售；销售" },
+  { word: "kilo", phonetic: "/ˈkiːləʊ/", meaning: "千克；公斤" },
+  { word: "yogurt", phonetic: "/ˈjɒɡət/", meaning: "酸奶" },
+  { word: "month", phonetic: "/mʌnθ/", meaning: "月；月份" },
+  { word: "birthday", phonetic: "/ˈbɜːθdeɪ/", meaning: "生日" },
+  { word: "gift", phonetic: "/ɡɪft/", meaning: "礼物" }
+];
+
+// ---------------- 游戏逻辑 ----------------
+let currentMode = 'cn2en'; // 'cn2en' 或 'en2cn'
+let currentQueue = [];
+let currentIndex = 0;
+let score = 0;
+let wrongList = []; // 本轮做错的单词
+let answered = false;
+let isWrongMode = false;
+
+// 初始化/重新开始
+function initGame() {
+  currentMode = 'cn2en';
+  document.getElementById('mode-cn2en').classList.add('active');
+  document.getElementById('mode-en2cn').classList.remove('active');
+  
+  currentQueue = shuffle([...WORD_LIST]);
+  currentIndex = 0;
+  score = 0;
+  wrongList = [];
+  isWrongMode = false;
+  
+  document.getElementById('btn-wrong').textContent = '🔥 错词强化模式';
+  updateStats();
+  loadQuestion();
+}
+
+// 设置模式
+function setMode(mode) {
+  if (currentMode === mode) return;
+  currentMode = mode;
+  document.getElementById('mode-cn2en').classList.toggle('active', mode === 'cn2en');
+  document.getElementById('mode-en2cn').classList.toggle('active', mode === 'en2cn');
+  
+  // 切换模式后重新开始
+  currentQueue = shuffle([...WORD_LIST]);
+  currentIndex = 0;
+  score = 0;
+  wrongList = [];
+  isWrongMode = false;
+  document.getElementById('btn-wrong').textContent = '🔥 错词强化模式';
+  updateStats();
+  loadQuestion();
+}
+
+// 加载题目
+function loadQuestion() {
+  answered = false;
+  document.getElementById('btn-next').disabled = true;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('btn-wrong').style.display = 'block'; 
+
+  if (currentIndex >= currentQueue.length) {
+    showFinishScreen();
+    return;
+  }
+
+  const currentWord = currentQueue[currentIndex];
+  
+  const label = document.getElementById('prompt-label');
+  const display = document.getElementById('word-display');
+  const phonetic = document.getElementById('phonetic');
+
+  if (currentMode === 'cn2en') {
+    label.textContent = '请选择对应的英文单词';
+    display.textContent = currentWord.meaning;
+    phonetic.textContent = '';
+  } else {
+    label.textContent = '请选择对应的中文意思';
+    display.textContent = currentWord.word;
+    phonetic.textContent = currentWord.phonetic;
+  }
+
+  const options = generateOptions(currentWord);
+  renderOptions(options, currentWord);
+  updateStats();
+}
+
+// 生成4个随机选项
+function generateOptions(correctWord) {
+  const optionCount = 4;
+  const options = [correctWord];
+  
+  const pool = WORD_LIST.filter(w => w.word !== correctWord.word);
+  const shuffledPool = shuffle(pool);
+  
+  for (let i = 0; i < optionCount - 1 && i < shuffledPool.length; i++) {
+    options.push(shuffledPool[i]);
+  }
+  
+  return shuffle(options);
+}
+
+// 渲染选项
+function renderOptions(options, correctWord) {
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = currentMode === 'cn2en' ? opt.word : opt.meaning;
+    btn.onclick = () => checkAnswer(btn, opt, correctWord);
+    container.appendChild(btn);
+  });
+}
+
+// 检查答案
+function checkAnswer(btn, selectedWord, correctWord) {
+  if (answered) return;
+  answered = true;
+  
+  const isCorrect = selectedWord.word === correctWord.word;
+  const allBtns = document.querySelectorAll('.option');
+  const feedback = document.getElementById('feedback');
+  
+  allBtns.forEach(b => {
+    b.classList.add('disabled');
+    b.onclick = null;
+  });
+  
+  if (isCorrect) {
+    btn.classList.add('correct');
+    score++;
+    feedback.textContent = '🎉 回答正确！';
+    feedback.className = 'feedback ok';
+  } else {
+    btn.classList.add('wrong');
+    
+    allBtns.forEach(b => {
+      if (currentMode === 'cn2en' && b.textContent === correctWord.word) {
+        b.classList.add('correct');
+      } else if (currentMode === 'en2cn' && b.textContent === correctWord.meaning) {
+        b.classList.add('correct');
+      }
+    });
+    
+    if (!wrongList.find(w => w.word === correctWord.word)) {
+      wrongList.push(correctWord);
+    }
+    
+    feedback.textContent = `❌ 答错了，正确答案是：${currentMode === 'cn2en' ? correctWord.word : correctWord.meaning}`;
+    feedback.className = 'feedback no';
+  }
+  
+  updateStats();
+  document.getElementById('btn-next').disabled = false;
+}
+
+// 下一题
+function nextQuestion() {
+  if (!answered) return;
+  currentIndex++;
+  loadQuestion();
+}
+
+// 错词强化模式
+function startWrongMode() {
+  if (isWrongMode) {
+    alert('已经在错词强化模式中啦！');
+    return;
+  }
+  if (wrongList.length === 0) {
+    alert('太棒了！目前没有错词，先去正常刷题吧～');
+    return;
+  }
+  
+  isWrongMode = true;
+  currentQueue = shuffle([...wrongList]);
+  currentIndex = 0;
+  score = 0;
+  updateStats();
+  loadQuestion();
+  
+  document.getElementById('btn-wrong').textContent = '🔥 错词强化中...';
+}
+
+// 显示完成界面
+function showFinishScreen() {
+  const display = document.getElementById('word-display');
+  const label = document.getElementById('prompt-label');
+  const phonetic = document.getElementById('phonetic');
+  const container = document.getElementById('options-container');
+  const feedback = document.getElementById('feedback');
+  
+  label.textContent = isWrongMode ? '错词强化完成！' : '本轮刷题完成！';
+  display.textContent = `得分：${score} / ${currentQueue.length}`;
+  phonetic.textContent = '';
+  container.innerHTML = '';
+  
+  if (isWrongMode) {
+    feedback.textContent = wrongList.length > 0 ? `错题本已更新，还有 ${wrongList.length} 个错词` : '太棒了，错词全消灭！';
+    document.getElementById('btn-wrong').textContent = '🔥 错词强化模式';
+    isWrongMode = false; 
+  } else {
+    feedback.textContent = wrongList.length > 0 ? `还有 ${wrongList.length} 个错词待强化` : '太棒了，全对！';
+  }
+  
+  feedback.className = 'feedback';
+  document.getElementById('btn-next').disabled = true;
+}
+
+// 更新统计
+function updateStats() {
+  const total = currentQueue.length;
+  document.getElementById('progress').textContent = `${Math.min(currentIndex + 1, total)} / ${total}`;
+  document.getElementById('score').textContent = score;
+  document.getElementById('wrong-count').textContent = wrongList.length;
+}
+
+// 洗牌算法
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 启动
+initGame();
+</script>
+
+</body>
+</html>
